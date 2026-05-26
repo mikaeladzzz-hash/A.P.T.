@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anomalous Periodic Table</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=300;400;500;600;700;800&family=JetBrains+Mono:wght=400;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #020617;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3b82f6;
+    }
+    /* SVG spinning electron orbit keyframes */
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .orbit-spin {
+      animation: spin linear infinite;
+      transform-origin: 50px 50px; /* Crucial absolute anchor to avoid Firefox SVG rotation bug */
+    }
+    /* Periodic elements animations */
+    .element-card {
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .element-card:hover {
+      transform: translateY(-6px) scale(1.04);
+      box-shadow: 0 12px 24px -6px rgba(59, 130, 246, 0.4);
+      z-index: 10;
+    }
+    /* Structural Grid System */
+    .periodic-grid {
+      display: grid;
+      grid-template-columns: repeat(18, minmax(0, 1fr));
+      gap: 8px;
+    }
+    @media (max-width: 1280px) {
+      .periodic-grid-container {
+        overflow-x: auto;
+      }
+      .periodic-grid {
+        min-width: 1200px;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-blue-500/30 selection:text-blue-200">
+
+  <div class="flex flex-col flex-1 min-h-screen w-full">
+    
+    <!-- Top Navigation (Widescreen Stretch) -->
+    <header class="border-b border-slate-900 bg-slate-950/80 backdrop-blur-md sticky top-0 z-30 px-6 md:px-12 py-5 w-full">
+      <div class="max-w-full mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="px-2.5 py-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-[10px] font-black text-slate-950 rounded tracking-wider uppercase shadow-md">Saint John's Creation.</span>
+            <h1 class="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">Anomalous Periodic Table</h1>
+          </div>
+          <p class="text-xs text-slate-400 mt-1 max-w-4xl">Innovated by students of SMK St. John, this reimagined periodic table is specifically engineered to help Form 4 Science Stream students master chemistry faster.</p>
+        </div>
+        
+        <!-- Controls (Top Right alignment) -->
+        <div class="flex items-center gap-4 shrink-0 self-stretch md:self-auto justify-end">
+          
+          <!-- Interactive Sound (Volume) Button - Minimalist Style -->
+          <button id="sound-btn" onclick="toggleMute()" class="p-3 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-300 hover:text-blue-400 hover:border-slate-700 transition shadow-lg" title="Toggle audio feedback">
+            <svg id="sound-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M12 18.75V5.25L7.75 9H4.5v6h3.25L12 18.75z"></path>
+            </svg>
+          </button>
+
+        </div>
+      </div>
+    </header>
+
+    <main class="flex-1 max-w-full w-full px-6 md:px-12 py-6 flex flex-col lg:flex-row gap-8">
+      
+      <!-- Left Column: Table layouts, Phase simulator and Filters -->
+      <div class="flex-1 flex flex-col gap-6 overflow-hidden">
+        
+        <!-- Thermodynamic Matter State Simulator -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 bg-slate-900/30 p-5 rounded-xl border border-slate-800/80">
+          
+          <!-- Temperature Slider Control -->
+          <div class="md:col-span-8 flex flex-col justify-center">
+            <div class="flex items-center justify-between mb-2.5">
+              <label class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-red-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                Thermodynamic State Simulator
+              </label>
+              <span class="text-xs font-bold text-slate-100 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded shadow-inner">
+                <span id="temp-val" class="mono text-blue-400 font-extrabold">298</span> K | 
+                <span id="temp-celsius" class="mono text-slate-300">25</span> °C | 
+                <span id="temp-fahrenheit" class="mono text-slate-400">77</span> °F
+              </span>
+            </div>
+            
+            <div class="flex items-center gap-3">
+              <span class="text-[10px] text-slate-600 font-semibold uppercase">0 K</span>
+              <input 
+                type="range" 
+                id="temp-slider" 
+                min="0" 
+                max="6000" 
+                value="298" 
+                class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500 focus:outline-none"
+              >
+              <span class="text-[10px] text-slate-600 font-semibold uppercase">6000 K</span>
+            </div>
+            
+            <div class="flex justify-between mt-2.5 text-[10px] text-slate-400 font-medium px-1">
+              <button onclick="setTemp(0)" class="hover:text-blue-400 transition">Absolute Zero</button>
+              <button onclick="setTemp(273)" class="hover:text-blue-400 transition">Freezing (273K)</button>
+              <button onclick="setTemp(298)" class="hover:text-blue-400 transition text-blue-400 font-bold">Room Temp (298K)</button>
+              <button onclick="setTemp(373)" class="hover:text-blue-400 transition">Boiling Water (373K)</button>
+              <button onclick="setTemp(1000)" class="hover:text-blue-400 transition">1000 K</button>
+              <button onclick="setTemp(3000)" class="hover:text-blue-400 transition">3000 K</button>
+            </div>
+          </div>
+
+          <!-- Phase Guide display -->
+          <div class="md:col-span-4 flex flex-col justify-center border-t md:border-t-0 md:border-l border-slate-800/80 md:pl-6 pt-4 md:pt-0">
+            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2.5">Simulated State Color Guide</span>
+            <div class="grid grid-cols-3 gap-2.5 text-center text-[10px] font-bold">
+              <div class="border border-slate-700 bg-slate-900/60 rounded py-2 text-slate-300">
+                <span class="inline-block w-2 h-2 bg-slate-400 rounded-full mr-1.5"></span>Solid
+              </div>
+              <div class="border border-blue-500/30 bg-blue-500/5 rounded py-2 text-blue-300">
+                <span class="inline-block w-2 h-2 bg-blue-400 rounded-full mr-1.5 shadow-[0_0_6px_rgba(59,130,246,0.6)]"></span>Liquid
+              </div>
+              <div class="border border-amber-500/30 bg-amber-500/5 rounded py-2 text-amber-300">
+                <span class="inline-block w-2 h-2 bg-amber-400 rounded-full mr-1.5 shadow-[0_0_6px_rgba(245,158,11,0.6)]"></span>Gas
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Layout View Toggler Buttons -->
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-1.5 bg-slate-900/60 border border-slate-800 p-1 rounded-lg">
+            <button id="view-classic" onclick="toggleLayout('classic')" class="px-4 py-2 rounded-md text-xs font-bold bg-blue-600 text-slate-950 transition-all duration-250">
+              Architected Matrix
+            </button>
+            <button id="view-compact" onclick="toggleLayout('compact')" class="px-4 py-2 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition-all duration-250">
+              Nano Card
+            </button>
+          </div>
+        </div>
+
+        <!-- Classic Periodic Layout Container (Widescreen Stretch Container) -->
+        <div id="classic-grid-container" class="periodic-grid-container bg-slate-950/40 p-5 rounded-xl border border-slate-900 shadow-2xl backdrop-blur-sm w-full">
+          <!-- Column labels 1 to 18 -->
+          <div class="periodic-grid mb-3 text-center font-bold text-[10px] text-slate-600 select-none">
+            <div>1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div><div>7</div><div>8</div><div>9</div><div>10</div><div>11</div><div>12</div><div>13</div><div>14</div><div>15</div><div>16</div><div>17</div><div>18</div>
+          </div>
+          <!-- Grid target rendering -->
+          <div id="table-grid-classic" class="periodic-grid relative min-h-[500px] w-full"></div>
+        </div>
+
+        <!-- Compact Cards Grid Container (hidden by default) -->
+        <div id="compact-grid-container" class="hidden grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4 bg-slate-950/40 p-6 rounded-xl border border-slate-900 shadow-2xl">
+          <!-- Grid target rendering -->
+          <div id="table-grid-compact" class="contents"></div>
+        </div>
+
+        <!-- Chemical Group Filters Panel -->
+        <div class="bg-slate-900/30 p-5 rounded-xl border border-slate-800/80">
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-3">Filter by Chemical Family</span>
+          <div class="flex flex-wrap gap-2.5" id="category-filters">
+            <!-- Programmatically injected -->
+          </div>
+        </div>
+
+        <!-- Symmetrical Search & Display Controls -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-900/30 p-5 rounded-xl border border-slate-800/80">
+          <!-- Text Search element -->
+          <div class="flex flex-col gap-2">
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+              Search Element Database
+            </label>
+            <div class="relative w-full">
+              <input 
+                type="text" 
+                id="search-input" 
+                placeholder="Search Name, Symbol..." 
+                class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 pl-10 text-xs focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+              >
+              <svg class="absolute left-3.5 top-3.5 w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </div>
+          </div>
+          
+          <!-- View Display Metric Select -->
+          <div class="flex flex-col gap-2">
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+              </svg>
+              Display Custom Metric
+            </label>
+            <select id="property-toggle" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-xs font-semibold text-slate-200 focus:outline-none focus:border-blue-500 h-[42px]">
+              <option value="protons">Protons / Atomic Num</option>
+              <option value="shells">Shell configuration</option>
+              <option value="mass">Atomic Mass (u)</option>
+              <option value="electronegativity">Electronegativity</option>
+              <option value="discover">Discovery Year</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Interactive Detail Dashboard / Showcase / Compare tool -->
+      <aside class="w-full lg:w-[440px] shrink-0 flex flex-col gap-6">
+        
+        <!-- Toggle Tabs: Inspector and Compare -->
+        <div class="flex border border-slate-800 bg-slate-950/80 p-1 rounded-xl">
+          <button id="tab-inspector" onclick="switchSideTab('inspector')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg bg-slate-900 text-blue-400 transition-all">
+            Inspector
+          </button>
+          <button id="tab-compare" onclick="switchSideTab('compare')" class="flex-1 py-2 text-center text-xs font-semibold rounded-lg text-slate-400 hover:text-slate-100 transition-all">
+            Compare
+          </button>
+        </div>
+
+        <!-- TAB 1: Selected Element Detailed Card -->
+        <div id="panel-inspector" class="flex flex-col bg-slate-950/80 p-6 rounded-2xl border border-slate-800/80 shadow-2xl">
+          
+          <!-- Element Header info -->
+          <div class="text-center relative pb-4 border-b border-slate-900">
+            <div class="absolute top-0 left-0 bg-slate-900 px-2.5 py-0.5 rounded text-[10px] font-bold text-slate-500" id="detail-coordinates">
+              P: 2, G: 14
+            </div>
+            <div class="absolute top-0 right-0 bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded text-[10px] font-bold" id="detail-block">
+              p-block
+            </div>
+            
+            <!-- Element Chemical Block Symbol -->
+            <div id="detail-box-container" class="w-24 h-24 mx-auto rounded-xl flex flex-col justify-between p-3.5 border-2 mb-3 mt-4 shadow-xl transition-all duration-350">
+              <div class="flex justify-between items-start">
+                <span class="text-xs font-extrabold text-slate-400" id="detail-num">6</span>
+                <span class="text-[9px] font-black tracking-wider" id="detail-phase-badge">SOLID</span>
+              </div>
+              <span class="text-4xl font-black tracking-tight" id="detail-sym">C</span>
+              <span class="text-[9px] font-bold text-slate-300" id="detail-weight">12.011</span>
+            </div>
+
+            <h2 class="text-xl font-extrabold text-white tracking-tight" id="detail-name">Carbon</h2>
+            <span class="px-3 py-1 rounded-full text-[10px] font-bold inline-block mt-2" id="detail-category-badge">Reactive Nonmetals</span>
+          </div>
+
+          <!-- Dynamic Bohr orbits SVG engine -->
+          <div class="py-4 border-b border-slate-900 flex flex-col items-center">
+            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Revolving Bohr Shell Model</span>
+            <div class="relative w-44 h-44 flex items-center justify-center bg-slate-950/60 rounded-full border border-slate-900">
+              <svg id="bohr-svg" class="w-full h-full" viewBox="0 0 100 100">
+                <!-- Inner Nucleus -->
+                <circle cx="50" cy="50" r="7.5" fill="url(#nucleus-grad)" />
+                <!-- Orbit structures and electrons injected here dynamically -->
+              </svg>
+              <!-- Glowing def shadows -->
+              <svg class="absolute h-0 w-0">
+                <defs>
+                  <radialGradient id="nucleus-grad" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#3b82f6" />
+                    <stop offset="100%" stop-color="#1d4ed8" />
+                  </radialGradient>
+                  <filter id="glow">
+                    <feGaussianBlur stdDeviation="0.6" result="coloredBlur"/>
+                    <feMerge>
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+                </defs>
+              </svg>
+            </div>
+            <!-- Shell array description label -->
+            <div class="mt-3 flex gap-2 items-center">
+              <span class="text-[10px] font-semibold text-slate-500 uppercase">Shells Electrons:</span>
+              <span id="detail-shells-dist" class="mono text-xs font-bold text-blue-400 bg-slate-900 border border-slate-800 px-2 py-0.5 rounded">2, 4</span>
+            </div>
+          </div>
+
+          <!-- Atomic Structure Specifications -->
+          <div class="py-4 border-b border-slate-900">
+            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2.5">Detailed Atomic Structure</span>
+            <div class="grid grid-cols-3 gap-2 text-center">
+              <div class="bg-slate-900/50 p-2 rounded-lg border border-slate-800">
+                <span class="text-[9px] text-slate-500 block font-bold uppercase">Protons</span>
+                <span id="structure-protons" class="mono text-sm font-extrabold text-blue-400">6</span>
+              </div>
+              <div class="bg-slate-900/50 p-2 rounded-lg border border-slate-800">
+                <span class="text-[9px] text-slate-500 block font-bold uppercase">Neutrons</span>
+                <span id="structure-neutrons" class="mono text-sm font-extrabold text-indigo-400">6</span>
+              </div>
+              <div class="bg-slate-900/50 p-2 rounded-lg border border-slate-800">
+                <span class="text-[9px] text-slate-500 block font-bold uppercase">Electrons</span>
+                <span id="structure-electrons" class="mono text-sm font-extrabold text-cyan-400">6</span>
+              </div>
+            </div>
+            <div class="mt-2.5 bg-slate-900/20 p-2.5 rounded-lg border border-slate-850 text-xs flex justify-between items-center">
+              <span class="text-slate-500 font-semibold">Config String:</span>
+              <span id="detail-electron-config" class="mono font-bold text-slate-200">[He] 2s² 2p²</span>
+            </div>
+          </div>
+
+          <!-- Fun Fact Segment -->
+          <div class="py-4 border-b border-slate-900">
+            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">Fun Fact</span>
+            <div class="bg-slate-900/40 p-3 rounded-lg border border-slate-850">
+              <div class="flex items-center justify-between mb-1.5">
+                <span id="discovery-author" class="font-extrabold text-xs text-slate-200">Ancient Civilizations</span>
+                <span id="discovery-year" class="px-2 py-0.5 rounded bg-slate-850 text-[10px] font-black text-amber-500 mono">3750 BC</span>
+              </div>
+              <p class="text-[11px] text-slate-400 italic leading-relaxed" id="discovery-desc">
+                Discovered in antiquity. Used by egyptians.
+              </p>
+            </div>
+          </div>
+
+          <!-- Common Applications Segment -->
+          <div class="py-4">
+            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2.5">Common Real-World Applications</span>
+            <div id="applications-list" class="flex flex-col gap-2">
+              <!-- Rendered programmatically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: Dynamic Element Compare Tool -->
+        <div id="panel-compare" class="hidden flex flex-col bg-slate-950/80 p-6 rounded-2xl border border-slate-800/80 shadow-2xl">
+          <div class="text-center pb-3 border-b border-slate-900">
+            <h2 class="text-md font-extrabold text-white">Element Comparative Board</h2>
+            <p class="text-[11px] text-slate-400">Select any two of the 22 elements to contrast properties side-by-side.</p>
+          </div>
+
+          <!-- Compare Selectors -->
+          <div class="grid grid-cols-2 gap-3 py-4 border-b border-slate-900">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[10px] font-bold text-slate-500 uppercase">Element A</label>
+              <select id="compare-el-a" onchange="compareElements()" class="bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-blue-400 font-bold focus:outline-none"></select>
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[10px] font-bold text-slate-500 uppercase">Element B</label>
+              <select id="compare-el-b" onchange="compareElements()" class="bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-emerald-400 font-bold focus:outline-none"></select>
+            </div>
+          </div>
+
+          <!-- Comparison Display -->
+          <div class="py-4 flex flex-col gap-4">
+            <!-- Row: Symbol Visual Cards -->
+            <div class="grid grid-cols-2 gap-4 text-center">
+              <div id="compare-card-a" class="p-4 rounded-xl border border-blue-500/30 bg-blue-500/5">
+                <span id="comp-num-a" class="text-xs text-slate-500 block">3</span>
+                <span id="comp-sym-a" class="text-3xl font-black text-blue-400 block my-1">Li</span>
+                <span id="comp-name-a" class="text-xs font-bold text-slate-300 block">Lithium</span>
+              </div>
+              <div id="compare-card-b" class="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/5">
+                <span id="comp-num-b" class="text-xs text-slate-500 block">11</span>
+                <span id="comp-sym-b" class="text-3xl font-black text-emerald-400 block my-1">Na</span>
+                <span id="comp-name-b" class="text-xs font-bold text-slate-300 block">Sodium</span>
+              </div>
+            </div>
+
+            <!-- Quantitative Stats Table -->
+            <div class="flex flex-col gap-2.5 text-xs mt-2">
+              <div class="bg-slate-900/40 p-2 rounded border border-slate-900 flex justify-between">
+                <span class="text-slate-500 font-bold">Category</span>
+                <div class="flex w-2/3 justify-between font-semibold">
+                  <span id="comp-cat-a" class="text-blue-400 w-1/2 text-left truncate pr-1">Alkali Metals</span>
+                  <span id="comp-cat-b" class="text-emerald-400 w-1/2 text-right truncate pl-1">Alkali Metals</span>
+                </div>
+              </div>
+
+              <div class="bg-slate-900/40 p-2 rounded border border-slate-900 flex justify-between">
+                <span class="text-slate-500 font-bold">Atomic Mass</span>
+                <div class="flex w-2/3 justify-between mono font-semibold">
+                  <span id="comp-mass-a" class="text-slate-300 w-1/2 text-left">6.94</span>
+                  <span id="comp-mass-b" class="text-slate-300 w-1/2 text-right">22.99</span>
+                </div>
+              </div>
+
+              <div class="bg-slate-900/40 p-2 rounded border border-slate-900 flex justify-between">
+                <span class="text-slate-500 font-bold">Electronegativity</span>
+                <div class="flex w-2/3 justify-between mono font-semibold">
+                  <span id="comp-electro-a" class="text-slate-300 w-1/2 text-left">0.98</span>
+                  <span id="comp-electro-b" class="text-slate-300 w-1/2 text-right">0.93</span>
+                </div>
+              </div>
+
+              <div class="bg-slate-900/40 p-2 rounded border border-slate-900 flex justify-between">
+                <span class="text-slate-500 font-bold">Discovery Year</span>
+                <div class="flex w-2/3 justify-between font-semibold">
+                  <span id="comp-disc-a" class="text-slate-300 w-1/2 text-left">1817</span>
+                  <span id="comp-disc-b" class="text-slate-300 w-1/2 text-right">1807</span>
+                </div>
+              </div>
+
+              <div class="bg-slate-900/40 p-2 rounded border border-slate-900 flex justify-between">
+                <span class="text-slate-500 font-bold">Discoverer</span>
+                <div class="flex w-2/3 justify-between text-[11px] font-semibold">
+                  <span id="comp-discby-a" class="text-slate-400 w-1/2 text-left truncate pr-1">J. Arfwedson</span>
+                  <span id="comp-discby-b" class="text-slate-400 w-1/2 text-right truncate pl-1">Humphry Davy</span>
+                </div>
+              </div>
+
+              <div class="bg-slate-900/40 p-2 rounded border border-slate-900 flex justify-between">
+                <span class="text-slate-500 font-bold">Melt / Boil Pt</span>
+                <div class="flex w-2/3 justify-between mono font-semibold">
+                  <span id="comp-temp-a" class="text-slate-300 w-1/2 text-left">453K / 1615K</span>
+                  <span id="comp-temp-b" class="text-slate-300 w-1/2 text-right">370K / 1156K</span>
+                </div>
+              </div>
+
+              <div class="bg-slate-900/40 p-2 rounded border border-slate-900 flex justify-between">
+                <span class="text-slate-500 font-bold">Protons-Neut-Elec</span>
+                <div class="flex w-2/3 justify-between mono font-semibold">
+                  <span id="comp-structure-a" class="text-slate-300 w-1/2 text-left">3 / 4 / 3</span>
+                  <span id="comp-structure-b" class="text-slate-300 w-1/2 text-right">11 / 12 / 11</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </aside>
+    </main>
+
+    <!-- Page Footer -->
+    <footer class="mt-auto border-t border-slate-900 bg-slate-950 px-6 md:px-12 py-5 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4 w-full">
+      <span>© 2026 Anomalous Periodic Table. Saint John's Creation.</span>
+      <span class="mono text-[10px]">Transition state boundary calculations conform to 1 atm under STP rules.</span>
+    </footer>
+  </div>
+
+  <!-- 22 Curated Elements Database and core Application Script -->
+  <script>
+    // Audio synthesis setup (Web Audio API)
+    let audioCtx = null;
+    let isMuted = false;
+
+    function playAtomSound(atomicNumber) {
+      if (isMuted) return;
+      try {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        
+        osc.type = 'sine';
+        // Ascending harmonic frequencies based on atomic structure
+        const baseFreq = 180;
+        const pitchMultiplier = 15;
+        osc.frequency.setValueAtTime(baseFreq + (atomicNumber * pitchMultiplier), audioCtx.currentTime);
+        
+        // Beautiful soft exponential decay
+        gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+        
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.5);
+      } catch (e) {
+        console.warn("Audio Context failed to start: ", e);
+      }
+    }
+
+    function toggleMute() {
+      isMuted = !isMuted;
+      const icon = document.getElementById('sound-icon');
+      if (isMuted) {
+        icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />`;
+        document.getElementById('sound-btn').classList.add('text-red-500', 'border-red-900/50', 'bg-red-950/20');
+      } else {
+        icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M12 18.75V5.25L7.75 9H4.5v6h3.25L12 18.75z"></path>`;
+        document.getElementById('sound-btn').classList.remove('text-red-500', 'border-red-900/50', 'bg-red-950/20');
+      }
+    }
+
+    // Exact requested 22 element collection with rigorous parameters
+    const elements = [
+      // Hydrogen
+      { number: 1, symbol: "H", name: "Hydrogen", mass: 1.008, group: 1, period: 1, category: "reactive-nonmetal", state: "gas", melt: 13.99, boil: 20.27, electro: 2.20, shells: [1], config: "1s¹", protons: 1, neutrons: 0, electrons: 1, discoverer: "Henry Cavendish", year: 1766, applications: ["Rocket engines & atmospheric liquid propellants", "Industrial synthesizing of fertilizers", "Hydrogen fuel cells for sustainable cars"] },
+      
+      // Alkali Metals (Group 1)
+      { number: 3, symbol: "Li", name: "Lithium", mass: 6.94, group: 1, period: 2, category: "alkali-metal", state: "solid", melt: 453.69, boil: 1615, electro: 0.98, shells: [2, 1], config: "[He] 2s¹", protons: 3, neutrons: 4, electrons: 3, discoverer: "Johan August Arfwedson", year: 1817, applications: ["Rechargeable lithium-ion battery cells", "Therapeutic mood stabilizing medications", "Heat resistant glass & ceramics manufacturing"] },
+      { number: 11, symbol: "Na", name: "Sodium", mass: 22.990, group: 1, period: 3, category: "alkali-metal", state: "solid", melt: 370.87, boil: 1156, electro: 0.93, shells: [2, 8, 1], config: "[Ne] 3s¹", protons: 11, neutrons: 12, electrons: 11, discoverer: "Humphry Davy", year: 1807, applications: ["Preserving table salt & food flavoring additive", "High-efficiency orange sodium vapor highway lamps", "Fast-breeder nuclear reactor thermal liquid coolant"] },
+      { number: 19, symbol: "K", name: "Potassium", mass: 39.098, group: 1, period: 4, category: "alkali-metal", state: "solid", melt: 336.5, boil: 1032, electro: 0.82, shells: [2, 8, 8, 1], config: "[Ar] 4s¹", protons: 19, neutrons: 20, electrons: 19, discoverer: "Humphry Davy", year: 1807, applications: ["High strength agricultural potash fertilizers", "Crucial biological cellular ion pump operations", "Industrial grade gunpowder manufacturing"] },
+      
+      // Alkaline Earth (Group 2)
+      { number: 4, symbol: "Be", name: "Beryllium", mass: 9.0122, group: 2, period: 2, category: "alkaline-earth", state: "solid", melt: 1560, boil: 2742, electro: 1.57, shells: [2, 2], config: "[He] 2s²", protons: 4, neutrons: 5, electrons: 4, discoverer: "Louis Nicolas Vauquelin", year: 1798, applications: ["X-ray medical imaging window shields", "High strength mirrors for James Webb Telescope", "Non-sparking specialized oil rig tools"] },
+      { number: 12, symbol: "Mg", name: "Magnesium", mass: 24.305, group: 2, period: 3, category: "alkaline-earth", state: "solid", melt: 923, boil: 1363, electro: 1.31, shells: [2, 8, 2], config: "[Ne] 3s²", protons: 12, neutrons: 12, electrons: 12, discoverer: "Joseph Black", year: 1755, applications: ["Ultralight structural aircraft alloy compounds", "Emergency survival fire starter rods & flares", "Central atomic coordination structure in plant chlorophyll"] },
+      { number: 20, symbol: "Ca", name: "Calcium", mass: 40.078, group: 2, period: 4, category: "alkaline-earth", state: "solid", melt: 1115, boil: 1757, electro: 1.00, shells: [2, 8, 8, 2], config: "[Ar] 4s²", protons: 20, neutrons: 20, electrons: 20, discoverer: "Humphry Davy", year: 1808, applications: ["Construction materials (cement, gypsum, plaster)", "Crucial biological signal transmitters in human bones", "Heavy alloy smelting and metal deoxidizing agent"] },
+      
+      // Group 13: Boron, Aluminum
+      { number: 5, symbol: "B", name: "Boron", mass: 10.81, group: 13, period: 2, category: "metalloid", state: "solid", melt: 2349, boil: 4200, electro: 2.04, shells: [2, 3], config: "[He] 2s² 2p¹", protons: 5, neutrons: 6, electrons: 5, discoverer: "Gay-Lussac & Thenard", year: 1808, applications: ["Heatproof borosilicate laboratory glassware (Pyrex)", "Structural composites for golf clubs & armor plating", "Safe household cleaning borax and antiseptic agents"] },
+      { number: 13, symbol: "Al", name: "Aluminium", mass: 26.982, group: 13, period: 3, category: "post-transition-metal", state: "solid", melt: 933.47, boil: 2792, electro: 1.61, shells: [2, 8, 3], config: "[Ne] 3s² 3p¹", protons: 13, neutrons: 14, electrons: 13, discoverer: "Hans Christian Ørsted", year: 1825, applications: ["High strength lightweight structural airplane parts", "Sanitary soda canisters & culinary wrapping foils", "Overhead high-capacity power line cables"] },
+      
+      // Group 14: Carbon, Silicon
+      { number: 6, symbol: "C", name: "Carbon", mass: 12.011, group: 14, period: 2, category: "reactive-nonmetal", state: "solid", melt: 3823, boil: 4300, electro: 2.55, shells: [2, 4], config: "[He] 2s² 2p²", protons: 6, neutrons: 6, electrons: 6, discoverer: "Ancient Civilizations", year: -3750, applications: ["Fundamental biological chemistry of organic life", "Super strong carbon fiber racing structures", "Radiocarbon dating for historical artifacts"] },
+      { number: 14, symbol: "Si", name: "Silicon", mass: 28.085, group: 14, period: 3, category: "metalloid", state: "solid", melt: 1687, boil: 3538, electro: 1.90, shells: [2, 8, 4], config: "[Ne] 3s² 3p²", protons: 14, neutrons: 14, electrons: 14, discoverer: "Jöns Jacob Berzelius", year: 1823, applications: ["Silicon computer microchips & processors", "High-efficiency solar energy panel arrays", "Silicone rubber seals and glass production"] },
+      
+      // Group 15: Nitrogen, Phosphorus
+      { number: 7, symbol: "N", name: "Nitrogen", mass: 14.007, group: 15, period: 2, category: "reactive-nonmetal", state: "gas", melt: 63.15, boil: 77.36, electro: 3.04, shells: [2, 5], config: "[He] 2s² 2p³", protons: 7, neutrons: 7, electrons: 7, discoverer: "Daniel Rutherford", year: 1772, applications: ["Liquid nitrogen rapid cooling agents", "Ammonia fertilizers for global agriculture", "Inert gas shielding inside food packaging"] },
+      { number: 15, symbol: "P", name: "Phosphorus", mass: 30.974, group: 15, period: 3, category: "reactive-nonmetal", state: "solid", melt: 317.3, boil: 553.6, electro: 2.19, shells: [2, 8, 5], config: "[Ne] 3s² 3p³", protons: 15, neutrons: 16, electrons: 15, discoverer: "Hennig Brand", year: 1669, applications: ["Striking surfaces on safety matches", "Phosphate fertilizers and soil food", "Steel alloy agent and organic chemistry synthesis"] },
+      
+      // Group 16: Oxygen, Sulfur
+      { number: 8, symbol: "O", name: "Oxygen", mass: 15.999, group: 16, period: 2, category: "reactive-nonmetal", state: "gas", melt: 54.36, boil: 90.20, electro: 3.44, shells: [2, 6], config: "[He] 2s² 2p⁴", protons: 8, neutrons: 8, electrons: 8, discoverer: "Carl Wilhelm Scheele", year: 1771, applications: ["Medical oxygen life-support systems", "High-temperature steel oxy-fuel torches", "Rocket propellant liquid oxidizers"] },
+      { number: 16, symbol: "S", name: "Sulfur", mass: 32.06, group: 16, period: 3, category: "reactive-nonmetal", state: "solid", melt: 388.36, boil: 717.8, electro: 2.58, shells: [2, 8, 6], config: "[Ne] 3s² 3p⁴", protons: 16, neutrons: 16, electrons: 16, discoverer: "Ancient China", year: -2000, applications: ["Industrial grade sulfuric acid manufacturing", "Vulcanization of heavy vehicle tires", "Core ingredient in historic gunpowders"] },
+      
+      // Halogens (Group 17)
+      { number: 9, symbol: "F", name: "Fluorine", mass: 18.998, group: 17, period: 2, category: "halogen", state: "gas", melt: 53.48, boil: 85.03, electro: 3.98, shells: [2, 7], config: "[He] 2s² 2p⁵", protons: 9, neutrons: 10, electrons: 9, discoverer: "Henri Moissan", year: 1886, applications: ["Fluoride toothpastes to prevent dental decay", "Teflon non-stick frying pan surfaces", "Gaseous uranium enrichment processing"] },
+      { number: 17, symbol: "Cl", name: "Chlorine", mass: 35.45, group: 17, period: 3, category: "halogen", state: "gas", melt: 171.6, boil: 239.11, electro: 3.16, shells: [2, 8, 7], config: "[Ne] 3s² 3p⁵", protons: 17, neutrons: 18, electrons: 17, discoverer: "Carl Wilhelm Scheele", year: 1774, applications: ["Swimming pool purification & water sanitizing", "Durable polyvinyl chloride (PVC) conduits", "Household bleaches & chemical sanitizers"] },
+      { number: 35, symbol: "Br", name: "Bromine", mass: 79.904, group: 17, period: 4, category: "halogen", state: "liquid", melt: 265.8, boil: 332.0, electro: 2.96, shells: [2, 8, 18, 7], config: "[Ar] 3d¹⁰ 4s² 4p⁵", protons: 35, neutrons: 45, electrons: 35, discoverer: "Antoine Balard", year: 1826, applications: ["Polymer fire retardants for consumer electronics", "Industrial water purifier systems", "Sedative pharmaceutical medications"] },
+      { number: 53, symbol: "I", name: "Iodine", mass: 127.60, group: 17, period: 5, category: "halogen", state: "solid", melt: 386.85, boil: 457.4, electro: 2.66, shells: [2, 8, 18, 18, 7], config: "[Kr] 4d¹⁰ 5s² 5p⁵", protons: 53, neutrons: 74, electrons: 53, discoverer: "Bernard Courtois", year: 1811, applications: ["Antiseptic surgical cleaning solutions", "Contrast liquid for medical CT scanners", "Preventative nutritional additive in table salt"] },
+      
+      // Noble Gases (Group 18)
+      { number: 2, symbol: "He", name: "Helium", mass: 4.0026, group: 18, period: 1, category: "noble-gas", state: "gas", melt: 0.95, boil: 4.22, electro: null, shells: [2], config: "1s²", protons: 2, neutrons: 2, electrons: 2, discoverer: "Janssen & Lockyer", year: 1868, applications: ["Superfluid liquid coolant for clinical MRI scanners", "High altitude weather monitoring weather balloons", "Deep-sea deep dive trimix atmospheric tanks"] },
+      { number: 10, symbol: "Ne", name: "Neon", mass: 20.180, group: 18, period: 2, category: "noble-gas", state: "gas", melt: 24.56, boil: 27.07, electro: null, shells: [2, 8], config: "[He] 2s² 2p⁶", protons: 10, neutrons: 10, electrons: 10, discoverer: "Travers & Ramsay", year: 1898, applications: ["High-visibility glowing storefront advertising", "High-frequency helium-neon lasers", "Cryogenic refrigerant processing"] },
+      { number: 18, symbol: "Ar", name: "Argon", mass: 39.948, group: 18, period: 3, category: "noble-gas", state: "gas", melt: 83.8, boil: 87.3, electro: null, shells: [2, 8, 8], config: "[Ne] 3s² 3p⁶", protons: 18, neutrons: 22, electrons: 18, discoverer: "Rayleigh & Ramsay", year: 1894, applications: ["Shield gas during high temperature weld arcs", "Inner protective gases for incandescent bulbs", "Double glazed structural window thermic buffer"] }
+    ];
+
+    // Family category properties styles configuration mapping
+    const categories = {
+      "alkali-metal": { name: "Alkali Metals", bg: "bg-amber-600/15", border: "border-amber-500/80", text: "text-amber-400", dotBg: "bg-amber-500" },
+      "alkaline-earth": { name: "Alkaline Earth", bg: "bg-orange-600/15", border: "border-orange-500/80", text: "text-orange-400", dotBg: "bg-orange-500" },
+      "post-transition-metal": { name: "Post-Transition", bg: "bg-emerald-600/15", border: "border-emerald-500/80", text: "text-emerald-400", dotBg: "bg-emerald-500" },
+      "metalloid": { name: "Metalloids", bg: "bg-teal-600/15", border: "border-teal-500/80", text: "text-teal-400", dotBg: "bg-teal-500" },
+      "reactive-nonmetal": { name: "Reactive Nonmetals", bg: "bg-lime-600/15", border: "border-lime-500/80", text: "text-lime-400", dotBg: "bg-lime-500" },
+      "halogen": { name: "Halogens", bg: "bg-rose-600/15", border: "border-rose-500/80", text: "text-rose-400", dotBg: "bg-rose-500" },
+      "noble-gas": { name: "Noble Gases", bg: "bg-blue-600/15", border: "border-blue-500/80", text: "text-blue-400", dotBg: "bg-blue-500" }
+    };
+
+    // State parameters
+    let currentTemp = 298; // Kelvin (Room Temperature)
+    let selectedElement = elements.find(el => el.number === 6); // Carbon selected by default
+    let activeFilter = null;
+    let searchQuery = "";
+    let activeProperty = "protons";
+    let activeLayout = "classic"; // classic or compact
+
+    // Build category filters dynamically
+    const filtersContainer = document.getElementById('category-filters');
+    Object.entries(categories).forEach(([key, val]) => {
+      const btn = document.createElement('button');
+      btn.className = `px-3.5 py-2 rounded-lg border ${val.border} ${val.bg} ${val.text} text-[10px] font-extrabold hover:brightness-110 transition flex items-center gap-1.5`;
+      btn.onclick = () => toggleCategoryFilter(key, btn);
+      btn.innerHTML = `<span class="w-1.5 h-1.5 rounded-full ${val.dotBg}"></span> ${val.name}`;
+      filtersContainer.appendChild(btn);
+    });
+
+    // Populate compare selectors
+    const selectA = document.getElementById('compare-el-a');
+    const selectB = document.getElementById('compare-el-b');
+    elements.forEach(el => {
+      const optA = document.createElement('option');
+      optA.value = el.number;
+      optA.textContent = `${el.symbol} - ${el.name}`;
+      selectA.appendChild(optA);
+
+      const optB = document.createElement('option');
+      optB.value = el.number;
+      optB.textContent = `${el.symbol} - ${el.name}`;
+      selectB.appendChild(optB);
+    });
+    // Set default comparative selection values
+    selectA.value = 3; // Lithium
+    selectB.value = 11; // Sodium
+
+    function toggleCategoryFilter(categoryKey, btn) {
+      if (activeFilter === categoryKey) {
+        activeFilter = null;
+        document.querySelectorAll('#category-filters btn').forEach(b => b.classList.remove('ring-2', 'ring-blue-400'));
+      } else {
+        activeFilter = categoryKey;
+        document.querySelectorAll('#category-filters btn').forEach(b => b.classList.remove('ring-2', 'ring-blue-400'));
+        btn.classList.add('ring-2', 'ring-blue-400');
+      }
+      renderWorkspace();
+    }
+
+    // Toggle grid view mode
+    function toggleLayout(mode) {
+      activeLayout = mode;
+      const btnClassic = document.getElementById('view-classic');
+      const btnCompact = document.getElementById('view-compact');
+      const containerClassic = document.getElementById('classic-grid-container');
+      const containerCompact = document.getElementById('compact-grid-container');
+
+      if (mode === 'classic') {
+        btnClassic.className = 'px-4 py-2 rounded-md text-xs font-bold bg-blue-600 text-slate-950 transition-all';
+        btnCompact.className = 'px-4 py-2 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition-all';
+        containerClassic.classList.remove('hidden');
+        containerCompact.classList.add('hidden');
+      } else {
+        btnCompact.className = 'px-4 py-2 rounded-md text-xs font-bold bg-blue-600 text-slate-950 transition-all';
+        btnClassic.className = 'px-4 py-2 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition-all';
+        containerClassic.classList.add('hidden');
+        containerCompact.classList.remove('hidden');
+      }
+      renderWorkspace();
+    }
+
+    // Temperature slider handling
+    function setTemp(kelvin) {
+      document.getElementById('temp-slider').value = kelvin;
+      updateTempState(parseInt(kelvin));
+    }
+
+    const tempSlider = document.getElementById('temp-slider');
+    tempSlider.oninput = (e) => {
+      updateTempState(parseInt(e.target.value));
+    };
+
+    function updateTempState(kelvin) {
+      currentTemp = kelvin;
+      document.getElementById('temp-val').textContent = kelvin;
+      document.getElementById('temp-celsius').textContent = Math.round(kelvin - 273.15);
+      document.getElementById('temp-fahrenheit').textContent = Math.round((kelvin - 273.15) * 9/5 + 32);
+      renderWorkspace();
+      updateDetailsCard(selectedElement);
+    }
+
+    // View Property Toggle Option handling
+    document.getElementById('property-toggle').onchange = (e) => {
+      activeProperty = e.target.value;
+      renderWorkspace();
+    };
+
+    // Text query processing
+    document.getElementById('search-input').oninput = (e) => {
+      searchQuery = e.target.value.toLowerCase().trim();
+      renderWorkspace();
+    };
+
+    // Calculate elements transition states
+    function getElementStateAtTemp(el, kelvin) {
+      if (kelvin < el.melt) return 'solid';
+      if (kelvin >= el.melt && kelvin < el.boil) return 'liquid';
+      return 'gas';
+    }
+
+    // Main UI rendering engine
+    function renderWorkspace() {
+      const classicTarget = document.getElementById('table-grid-classic');
+      const compactTarget = document.getElementById('table-grid-compact');
+      
+      classicTarget.innerHTML = '';
+      compactTarget.innerHTML = '';
+
+      // 1. Render Classic Matrix Grid (Periods 1 to 5, Groups 1 to 18)
+      for (let p = 1; p <= 5; p++) {
+        for (let g = 1; g <= 18; g++) {
+          const matchedEl = elements.find(el => el.period === p && el.group === g);
+
+          if (matchedEl) {
+            const card = buildElementCard(matchedEl);
+            card.style = `grid-row: ${p}; grid-column: ${g};`;
+            classicTarget.appendChild(card);
+          } else {
+            // Draw coordinate placeholders to structure standard Periodic Table aesthetics
+            const emptyCell = document.createElement('div');
+            emptyCell.style = `grid-row: ${p}; grid-column: ${g};`;
+            emptyCell.className = `border border-slate-900/30 rounded-xl h-22 opacity-25 pointer-events-none flex items-center justify-center text-[8px] mono text-slate-800`;
+            classicTarget.appendChild(emptyCell);
+          }
+        }
+      }
+
+      // 2. Render Compact Cards layout (Only existing matches)
+      elements.forEach(el => {
+        const card = buildElementCard(el);
+        compactTarget.appendChild(card);
+      });
+    }
+
+    function buildElementCard(el) {
+      const card = document.createElement('button');
+      card.onclick = () => selectElement(el);
+
+      const stateOfMatter = getElementStateAtTemp(el, currentTemp);
+      const styleConfig = categories[el.category] || { bg: "bg-slate-900", border: "border-slate-800", text: "text-slate-200" };
+
+      let stateBorder = 'border-slate-850';
+      if (stateOfMatter === 'solid') stateBorder = 'border-slate-800';
+      else if (stateOfMatter === 'liquid') stateBorder = 'border-blue-500/80 shadow-[0_0_8px_rgba(59,130,246,0.25)]';
+      else if (stateOfMatter === 'gas') stateBorder = 'border-amber-500/80 shadow-[0_0_8px_rgba(245,158,11,0.25)]';
+
+      if (selectedElement.number === el.number) {
+        stateBorder = 'border-white ring-2 ring-blue-500 scale-102';
+      }
+
+      // Process searching and category filtering filters classes
+      let hideClass = '';
+      const matchesSearch = searchQuery === "" || 
+                            el.name.toLowerCase().includes(searchQuery) || 
+                            el.symbol.toLowerCase().includes(searchQuery) || 
+                            el.number.toString() === searchQuery;
+      const matchesCategory = activeFilter === null || el.category === activeFilter;
+
+      if (!matchesSearch || !matchesCategory) {
+        hideClass = 'opacity-15 pointer-events-none filter saturate-50';
+      }
+
+      // h-22 class size makes element card considerably larger in widescreen
+      card.className = `element-card h-22 p-3 flex flex-col justify-between rounded-xl text-left ${styleConfig.bg} ${styleConfig.text} border ${stateBorder} ${hideClass} cursor-pointer shadow-md`;
+
+      // Render Display Metric label inside element card
+      let dispVal = '';
+      if (activeProperty === 'protons') dispVal = `P: ${el.protons}`;
+      else if (activeProperty === 'shells') dispVal = el.shells.join('-');
+      else if (activeProperty === 'mass') dispVal = `${el.mass.toFixed(2)} u`;
+      else if (activeProperty === 'electronegativity') dispVal = el.electro ? `χ: ${el.electro}` : 'None';
+      else if (activeProperty === 'discover') dispVal = el.year < 0 ? `${Math.abs(el.year)} BC` : `${el.year}`;
+
+      card.innerHTML = `
+        <div class="flex justify-between items-start text-[10px] font-bold select-none leading-none">
+          <span class="text-slate-400">${el.number}</span>
+          <span class="${stateOfMatter === 'liquid' ? 'text-blue-400' : stateOfMatter === 'gas' ? 'text-amber-400' : 'text-slate-500'} font-black uppercase tracking-wider text-[9px]">
+            ${stateOfMatter === 'liquid' ? 'LIQ' : stateOfMatter === 'gas' ? 'GAS' : 'SOL'}
+          </span>
+        </div>
+        <div class="text-2xl font-black tracking-tight leading-none -mt-1 select-none">${el.symbol}</div>
+        <div class="text-[9.5px] font-bold opacity-80 select-none truncate tracking-wider uppercase">${dispVal}</div>
+      `;
+
+      return card;
+    }
+
+    function selectElement(el) {
+      selectedElement = el;
+      playAtomSound(el.number);
+      renderWorkspace();
+      updateDetailsCard(el);
+    }
+
+    function updateDetailsCard(el) {
+      const styleConfig = categories[el.category];
+      const stateOfMatter = getElementStateAtTemp(el, currentTemp);
+
+      // Detail container box styles
+      const dBox = document.getElementById('detail-box-container');
+      dBox.className = `w-24 h-24 mx-auto rounded-xl flex flex-col justify-between p-3.5 border-2 mb-3 mt-4 shadow-xl transition-all duration-300 ${styleConfig.bg} ${styleConfig.border} ${styleConfig.text}`;
+
+      document.getElementById('detail-num').textContent = el.number;
+      document.getElementById('detail-sym').textContent = el.symbol;
+      document.getElementById('detail-weight').textContent = el.mass;
+      document.getElementById('detail-name').textContent = el.name;
+
+      const badge = document.getElementById('detail-category-badge');
+      badge.textContent = styleConfig.name;
+      badge.className = `px-3 py-0.5 rounded-full text-[10px] font-bold inline-block mt-2 ${styleConfig.bg} ${styleConfig.text} border ${styleConfig.border}`;
+
+      document.getElementById('detail-coordinates').textContent = `Period: ${el.period}, Group: ${el.group}`;
+      document.getElementById('detail-block').textContent = `${getBlock(el.group, el.period)}-block`;
+
+      const phaseBadge = document.getElementById('detail-phase-badge');
+      if (stateOfMatter === 'solid') {
+        phaseBadge.textContent = "SOLID";
+        phaseBadge.className = "text-[9px] font-bold text-slate-500";
+      } else if (stateOfMatter === 'liquid') {
+        phaseBadge.textContent = "LIQUID";
+        phaseBadge.className = "text-[9px] font-extrabold text-blue-400 tracking-wider";
+      } else {
+        phaseBadge.textContent = "GAS";
+        phaseBadge.className = "text-[9px] font-extrabold text-amber-500 tracking-wider";
+      }
+
+      // Structural specs
+      document.getElementById('structure-protons').textContent = el.protons;
+      document.getElementById('structure-neutrons').textContent = el.neutrons;
+      document.getElementById('structure-electrons').textContent = el.electrons;
+      document.getElementById('detail-electron-config').textContent = el.config;
+      document.getElementById('detail-shells-dist').textContent = el.shells.join(', ');
+
+      // Discovery segment
+      document.getElementById('discovery-author').textContent = el.discoverer;
+      document.getElementById('discovery-year').textContent = el.year < 0 ? `${Math.abs(el.year)} BC` : `${el.year}`;
+      
+      const dDesc = document.getElementById('discovery-desc');
+      if (el.year < 0) {
+        dDesc.textContent = `Employed by prehistoric civilizations and ancient communities. Formally categorized by ${el.discoverer}.`;
+      } else {
+        dDesc.textContent = `Identified and isolated by ${el.discoverer} in the year ${el.year}.`;
+      }
+
+      // Real world applications segment
+      const appsContainer = document.getElementById('applications-list');
+      appsContainer.innerHTML = '';
+
+      el.applications.forEach((app, index) => {
+        const item = document.createElement('div');
+        item.className = 'bg-slate-900/50 p-2.5 rounded-lg border border-slate-900 flex gap-3 items-start hover:bg-slate-900/80 transition-all';
+        item.innerHTML = `
+          <div class="w-5 h-5 rounded bg-blue-500/10 text-blue-400 flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">
+            ${index + 1}
+          </div>
+          <span class="text-xs text-slate-300 font-medium leading-relaxed">${app}</span>
+        `;
+        appsContainer.appendChild(item);
+      });
+
+      // SVG Bohr electronic structures generator engine
+      drawBohrModel(el.shells);
+    }
+
+    function getBlock(group, period) {
+      if (group === 1 || group === 2) return 's';
+      if (group >= 13 && group <= 18) return 'p';
+      return 'd';
+    }
+
+    // Bohr Orbital vector renderer
+    function drawBohrModel(shells) {
+      const svg = document.getElementById('bohr-svg');
+
+      // Clear out previously animated tracks
+      const oldTracks = svg.querySelectorAll('.animated-orbit-element');
+      oldTracks.forEach(t => t.remove());
+
+      const shellQuantity = shells.length;
+      const rMin = 15;
+      const rMax = 44;
+      const gap = (rMax - rMin) / Math.max(1, shellQuantity - 1);
+
+      shells.forEach((electronsCount, index) => {
+        const radius = shellQuantity === 1 ? rMin : rMin + (index * gap);
+        const spinDuration = 12 + (index * 8); // outer orbits spin slower
+
+        // Create vector path circle
+        const track = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        track.setAttribute("cx", "50");
+        track.setAttribute("cy", "50");
+        track.setAttribute("r", radius.toString());
+        track.setAttribute("fill", "none");
+        track.setAttribute("stroke", "rgba(51, 65, 85, 0.4)");
+        track.setAttribute("stroke-width", "0.75");
+        track.setAttribute("class", "animated-orbit-element");
+        svg.appendChild(track);
+
+        // Rotating container applying orbit-spin animations
+        const spinGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        spinGroup.setAttribute("class", "animated-orbit-element orbit-spin");
+        // Absolute center origin mapping for Firefox support
+        spinGroup.style.transformOrigin = "50px 50px"; 
+        spinGroup.style.animationDuration = `${spinDuration}s`;
+
+        // Distribute electrons equally around current radial index boundary
+        for (let e = 0; e < electronsCount; e++) {
+          const angle = (e / electronsCount) * 2 * Math.PI;
+          const ex = 50 + radius * Math.cos(angle);
+          const ey = 50 + radius * Math.sin(angle);
+
+          const electron = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          electron.setAttribute("cx", ex.toString());
+          electron.setAttribute("cy", ey.toString());
+          electron.setAttribute("r", "2");
+          electron.setAttribute("fill", "#60a5fa");
+          electron.setAttribute("filter", "url(#glow)");
+          spinGroup.appendChild(electron);
+        }
+
+        svg.appendChild(spinGroup);
+      });
+    }
+
+    // Switching sidebar tabs logic
+    function switchSideTab(tabName) {
+      const tabs = ['inspector', 'compare'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`tab-${t}`);
+        const panel = document.getElementById(`panel-${t}`);
+        if (t === tabName) {
+          btn.className = "flex-1 py-2 text-center text-xs font-bold rounded-lg bg-slate-900 text-blue-400 transition-all";
+          panel.classList.remove('hidden');
+        } else {
+          btn.className = "flex-1 py-2 text-center text-xs font-semibold rounded-lg text-slate-400 hover:text-slate-100 transition-all";
+          panel.classList.add('hidden');
+        }
+      });
+
+      if (tabName === 'compare') {
+        compareElements();
+      }
+    }
+
+    // Compare Elements mechanism
+    function compareElements() {
+      const numA = parseInt(document.getElementById('compare-el-a').value);
+      const numB = parseInt(document.getElementById('compare-el-b').value);
+
+      const elA = elements.find(el => el.number === numA);
+      const elB = elements.find(el => el.number === numB);
+
+      if (!elA || !elB) return;
+
+      const styleA = categories[elA.category];
+      const styleB = categories[elB.category];
+
+      // Symbols Visual representation cards
+      document.getElementById('compare-card-a').className = `p-4 rounded-xl border ${styleA.border} ${styleA.bg} text-center`;
+      document.getElementById('comp-num-a').textContent = elA.number;
+      document.getElementById('comp-sym-a').textContent = elA.symbol;
+      document.getElementById('comp-sym-a').className = `text-3xl font-black ${styleA.text} block my-1`;
+      document.getElementById('comp-name-a').textContent = elA.name;
+
+      document.getElementById('compare-card-b').className = `p-4 rounded-xl border ${styleB.border} ${styleB.bg} text-center`;
+      document.getElementById('comp-num-b').textContent = elB.number;
+      document.getElementById('comp-sym-b').textContent = elB.symbol;
+      document.getElementById('comp-sym-b').className = `text-3xl font-black ${styleB.text} block my-1`;
+      document.getElementById('comp-name-b').textContent = elB.name;
+
+      // Quantitative Table values
+      document.getElementById('comp-cat-a').textContent = styleA.name;
+      document.getElementById('comp-cat-a').className = `${styleA.text} w-1/2 text-left truncate pr-1`;
+      document.getElementById('comp-cat-b').textContent = styleB.name;
+      document.getElementById('comp-cat-b').className = `${styleB.text} w-1/2 text-right truncate pl-1`;
+
+      document.getElementById('comp-mass-a').textContent = elA.mass;
+      document.getElementById('comp-mass-b').textContent = elB.mass;
+
+      document.getElementById('comp-electro-a').textContent = elA.electro || 'None';
+      document.getElementById('comp-electro-b').textContent = elB.electro || 'None';
+
+      document.getElementById('comp-disc-a').textContent = elA.year < 0 ? `${Math.abs(elA.year)} BC` : elA.year;
+      document.getElementById('comp-disc-b').textContent = elB.year < 0 ? `${Math.abs(elB.year)} BC` : elB.year;
+
+      document.getElementById('comp-discby-a').textContent = elA.discoverer;
+      document.getElementById('comp-discby-b').textContent = elB.discoverer;
+
+      document.getElementById('comp-temp-a').textContent = `${elA.melt}K / ${elA.boil}K`;
+      document.getElementById('comp-temp-b').textContent = `${elB.melt}K / ${elB.boil}K`;
+
+      document.getElementById('comp-structure-a').textContent = `${elA.protons} / ${elA.neutrons} / ${elA.electrons}`;
+      document.getElementById('comp-structure-b').textContent = `${elB.protons} / ${elB.neutrons} / ${elB.electrons}`;
+    }
+
+    // Page load setup
+    window.onload = () => {
+      renderWorkspace();
+      updateDetailsCard(selectedElement);
+    };
+  </script>
+</body>
+</html>
